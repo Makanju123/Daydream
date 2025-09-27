@@ -968,12 +968,12 @@ function endMatchAndShowFinal() {
     }
     finalScoreInfoEl.textContent = `Your Score: ${state.score} | Optimus's Score: ${state.cpuScore}`;
     playSfx(audioVictory);
-  } else {
+   } else {
     if (state.livesLeft > 0) {
-      finalTitle.textContent = "You Won, Congratulations!";
+      finalTitle.textContent = "WINNER🎉🎉🎉";
       playSfx(audioVictory);
     } else {
-      finalTitle.textContent = "You Lost";
+      finalTitle.textContent = "LOSER💔💔💔";
     }
   }
   finalOverlay.style.display = "flex";
