@@ -62,8 +62,11 @@ const THEMES = {
 let playerName = "Player";
 let chosenDifficulty = "normal";
 let chosenTheme = "classic";
+let gameMode = "survival"; // survival or scores
 let initialLives = 3;
 let multiBallEnabled = false;
+let matchDuration = 60;
+
 let state = {
   running: false,
   gameOver: false,
@@ -71,6 +74,10 @@ let state = {
   scoringLocked: false,
   livesLeft: initialLives,
   livesRight: initialLives,
+  score: 0,
+  highScore: 0,
+  cpuScore: 0,
+  gameTime: 0,
   lastTime: 0,
   playerY: 0,
   cpuY: 0,
@@ -212,18 +219,33 @@ const rightNameEl = document.getElementById("rightName");
 const leftScoreEl = document.getElementById("leftScore");
 const rightScoreEl = document.getElementById("rightScore");
 const matchInfoEl = document.getElementById("matchInfo");
+const highScoreInfoEl = document.getElementById("highScoreInfo");
 const speedInfoEl = document.getElementById("speedInfo");
+const timerInfoEl = document.getElementById("timerInfo");
 const pointBanner = document.getElementById("pointBanner");
 const nameOverlay = document.getElementById("nameOverlay");
 const difficultyOverlay = document.getElementById("difficultyOverlay");
 const roundsOverlay = document.getElementById("roundsOverlay");
+const modeOverlay = document.getElementById("modeOverlay");
+const timeOverlay = document.getElementById("timeOverlay");
 const themeOverlay = document.getElementById("themeOverlay");
 const sacrificeOverlay = document.getElementById("sacrificeOverlay");
 const finalOverlay = document.getElementById("finalOverlay");
+const finalScoreInfoEl = document.getElementById("finalScoreInfo");
 const nameContinueBtn = document.getElementById("nameContinue");
 const diffContinueBtn = document.getElementById("diffContinue");
 const roundsContinueBtn = document.getElementById("roundsContinue");
+const modeContinueBtn = document.getElementById("modeContinue");
+const timeContinueBtn = document.getElementById("timeContinue");
 const themeContinueBtn = document.getElementById("themeContinue");
+const multiBallContinueBtn = document.getElementById("multiBallContinue");
+
+const diffPrevBtn = document.getElementById("diffPrev");
+const modePrevBtn = document.getElementById("modePrev");
+const roundsPrevBtn = document.getElementById("roundsPrev");
+const multiBallPrevBtn = document.getElementById("multiBallPrev");
+const timePrevBtn = document.getElementById("timePrev");
+const themePrevBtn = document.getElementById("themePrev");
 const playAgainBtn = document.getElementById("playAgain");
 const resetBtn = document.getElementById("resetBtn");
 const exitBtn = document.getElementById("exitBtn");
@@ -234,7 +256,6 @@ const audioWall = document.getElementById("sfxWall");
 const audioScore = document.getElementById("sfxScore");
 const audioVictory = document.getElementById("sfxVictory");
 const multiBallOverlay = document.getElementById("multiBallOverlay");
-const multiBallContinueBtn = document.getElementById("multiBallContinue");
 
 function clamp(v, a, b) {
   return Math.max(a, Math.min(b, v));
@@ -275,7 +296,12 @@ diffContinueBtn.addEventListener("click", () => {
     chosenDifficulty = "normal";
   }
   difficultyOverlay.style.display = "none";
-  roundsOverlay.style.display = "flex";
+  modeOverlay.style.display = "flex";
+});
+
+diffPrevBtn.addEventListener("click", () => {
+  difficultyOverlay.style.display = "none";
+  nameOverlay.style.display = "flex";
 });
 
 document.querySelectorAll("#roundGrid .selectable").forEach((btn) => {
@@ -295,7 +321,39 @@ roundsContinueBtn.addEventListener("click", () => {
     initialLives = 3;
   }
   roundsOverlay.style.display = "none";
-  multiBallOverlay.style.display = "flex";
+  themeOverlay.style.display = "flex";
+});
+
+roundsPrevBtn.addEventListener("click", () => {
+  roundsOverlay.style.display = "none";
+  modeOverlay.style.display = "flex";
+});
+
+document.querySelectorAll("#modeGrid .selectable").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    clearSelected("#modeGrid");
+    selectElement(btn);
+    gameMode = btn.dataset.mode;
+  });
+});
+
+modeContinueBtn.addEventListener("click", () => {
+  const sel = document.querySelector("#modeGrid .selected");
+  if (!sel) {
+    document.querySelector('#modeGrid .selectable[data-mode="survival"]').classList.add("selected");
+    gameMode = "survival";
+  }
+  modeOverlay.style.display = "none";
+  if (gameMode === "scores") {
+    multiBallOverlay.style.display = "flex";
+  } else {
+    roundsOverlay.style.display = "flex";
+  }
+});
+
+modePrevBtn.addEventListener("click", () => {
+  modeOverlay.style.display = "none";
+  difficultyOverlay.style.display = "flex";
 });
 
 document.querySelectorAll("#multiBallGrid .selectable").forEach((btn) => {
@@ -315,7 +373,40 @@ multiBallContinueBtn.addEventListener("click", () => {
     multiBallEnabled = false;
   }
   multiBallOverlay.style.display = "none";
+  if (gameMode === "scores") {
+    timeOverlay.style.display = "flex";
+  } else {
+    themeOverlay.style.display = "flex";
+  }
+});
+
+multiBallPrevBtn.addEventListener("click", () => {
+  multiBallOverlay.style.display = "none";
+  modeOverlay.style.display = "flex";
+});
+
+document.querySelectorAll("#timeGrid .selectable").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    clearSelected("#timeGrid");
+    selectElement(btn);
+    matchDuration = parseInt(btn.dataset.time, 10);
+  });
+});
+
+timeContinueBtn.addEventListener("click", () => {
+  if (!document.querySelector("#timeGrid .selected")) {
+    document
+      .querySelector('#timeGrid .selectable[data-time="60"]')
+      .classList.add("selected");
+    matchDuration = 60;
+  }
+  timeOverlay.style.display = "none";
   themeOverlay.style.display = "flex";
+});
+
+timePrevBtn.addEventListener("click", () => {
+  timeOverlay.style.display = "none";
+  multiBallOverlay.style.display = "flex";
 });
 
 document.querySelectorAll(".themeOption").forEach((btn) => {
@@ -336,8 +427,28 @@ themeContinueBtn.addEventListener("click", () => {
     chosenTheme = "classic";
   }
   themeOverlay.style.display = "none";
+  if (gameMode === "scores") {
+    document.getElementById("highScoreInfo").style.display = "block";
+    document.getElementById("leftScore").style.display = "block";
+    document.getElementById("rightScore").style.display = "block";
+    document.getElementById("matchInfo").style.display = "block";
+  } else {
+    document.getElementById("highScoreInfo").style.display = "none";
+    document.getElementById("leftScore").style.display = "flex";
+    document.getElementById("rightScore").style.display = "flex";
+    document.getElementById("matchInfo").style.display = "block";
+  }
   initAudio();
   startMatch();
+});
+
+themePrevBtn.addEventListener("click", () => {
+  themeOverlay.style.display = "none";
+  if (gameMode === "scores") {
+    timeOverlay.style.display = "flex";
+  } else {
+    roundsOverlay.style.display = "flex";
+  }
 });
 
 pauseBtn.addEventListener("click", () => togglePause());
@@ -356,6 +467,10 @@ resetBtn.addEventListener("click", () => {
   nameOverlay.style.display = "flex";
   state.running = false;
   state.gameOver = false;
+  if (gameMode === "scores") {
+    state.score = 0;
+    updateScoreUI();
+  }
 });
 
 exitBtn.addEventListener("click", () => window.location.reload());
@@ -365,8 +480,24 @@ function startMatch() {
   state.gameOver = false;
   state.paused = false;
   state.scoringLocked = false;
-  state.livesLeft = initialLives;
-  state.livesRight = initialLives;
+  if (gameMode === "survival") {
+    state.livesLeft = initialLives;
+    state.livesRight = initialLives;
+    matchInfoEl.textContent = `${initialLives} Lives`;
+    updateLivesUI();
+    timerInfoEl.style.display = "none";
+    matchInfoEl.style.display = "block";
+  } else {
+    state.score = 0;
+    state.cpuScore = 0;
+    state.highScore = localStorage.getItem("pongHighScore") || 0;
+    state.gameTime = matchDuration;
+    highScoreInfoEl.textContent = `High Score: ${state.highScore}`;
+    updateScoreUI();
+    updateTimerUI();
+    timerInfoEl.style.display = "block";
+    matchInfoEl.style.display = "none";
+  }
   state.longestRally = 0;
   state.fastestBall = 0;
   state.playerPadH = PADDLE_H_BASE * PADDLE_HEIGHT_MULT;
@@ -376,8 +507,9 @@ function startMatch() {
   blocks.forEach((b) => {
     b.active = true;
   });
-  matchInfoEl.textContent = `${initialLives} Lives`;
-  updateLivesUI();
+  if (gameMode === "survival") {
+    updateLivesUI();
+  }
   resetRoundServe();
   applyTheme();
   state.lastTime = performance.now();
@@ -486,6 +618,15 @@ function handlePaddleCollision(dt) {
 
 function update(dt) {
   if (!state.running || state.gameOver || state.paused) return;
+
+  if (gameMode === 'scores') {
+    state.gameTime -= dt;
+    if (state.gameTime <= 0) {
+      state.gameTime = 0;
+      endMatchAndShowFinal();
+    }
+    updateTimerUI();
+  }
 
   particles = particles.filter((p) => {
     p.update(dt);
@@ -603,16 +744,29 @@ function onPoint(winner) {
     15
   );
   showPointBanner(`${winner === "player" ? playerName : "Optimus"} scores!`);
-  if (winner === "player") {
-    commitLoss("cpu", "life");
-  } else {
-    if (
-      state.livesLeft > 1 &&
-      (!state.playerSacrificedBlocks || !state.playerSacrificedPad)
-    ) {
-      showSacrificeOverlay();
+  if (gameMode === "scores") {
+    if (winner === "player") {
+      state.score++;
     } else {
-      commitLoss("player", "life");
+      state.cpuScore++;
+    }
+    updateScoreUI();
+    setTimeout(() => {
+      state.scoringLocked = false;
+      resetRoundServe();
+    }, 900);
+  } else {
+    if (winner === "player") {
+      commitLoss("cpu", "life");
+    } else {
+      if (
+        state.livesLeft > 1 &&
+        (!state.playerSacrificedBlocks || !state.playerSacrificedPad)
+      ) {
+        showSacrificeOverlay();
+      } else {
+        commitLoss("player", "life");
+      }
     }
   }
 }
@@ -764,18 +918,34 @@ function playGeneratedSound(soundId) {
   }
 }
 
+function updateScoreUI() {
+  leftScoreEl.textContent = state.score;
+  rightScoreEl.textContent = state.cpuScore;
+}
+
+function updateTimerUI() {
+  const minutes = Math.floor(state.gameTime / 60);
+  const seconds = Math.floor(state.gameTime % 60).toString().padStart(2, '0');
+  timerInfoEl.textContent = `Time: ${minutes}:${seconds}`;
+}
+
 function updateLivesUI() {
-  leftScoreEl.innerHTML = "";
-  rightScoreEl.innerHTML = "";
-  for (let i = 0; i < initialLives; i++) {
-    const dot = document.createElement("div");
-    dot.className = "life-dot" + (i < state.livesLeft ? "" : " empty");
-    leftScoreEl.appendChild(dot);
-  }
-  for (let i = 0; i < initialLives; i++) {
-    const dot = document.createElement("div");
-    dot.className = "life-dot" + (i < state.livesRight ? "" : " empty");
-    rightScoreEl.appendChild(dot);
+  if (gameMode === "survival") {
+    leftScoreEl.innerHTML = "";
+    rightScoreEl.innerHTML = "";
+    for (let i = 0; i < initialLives; i++) {
+      const dot = document.createElement("div");
+      dot.className = "life-dot" + (i < state.livesLeft ? "" : " empty");
+      leftScoreEl.appendChild(dot);
+    }
+    for (let i = 0; i < initialLives; i++) {
+      const dot = document.createElement("div");
+      dot.className = "life-dot" + (i < state.livesRight ? "" : " empty");
+      rightScoreEl.appendChild(dot);
+    }
+  } else {
+    leftScoreEl.innerHTML = "";
+    rightScoreEl.innerHTML = "";
   }
 }
 
@@ -783,11 +953,28 @@ function endMatchAndShowFinal() {
   state.gameOver = true;
   state.running = false;
   const finalTitle = document.getElementById("finalTitle");
-  if (state.livesLeft > 0) {
-    finalTitle.textContent = "You Won, Congratulations!";
+  if (gameMode === "scores") {
+    if (state.score > state.cpuScore) {
+      finalTitle.textContent = "You Won!";
+      if (state.score > state.highScore) {
+        state.highScore = state.score;
+        localStorage.setItem("pongHighScore", state.highScore);
+        finalTitle.textContent = "New High Score!";
+      }
+    } else if (state.cpuScore > state.score) {
+      finalTitle.textContent = "You Lost";
+    } else {
+      finalTitle.textContent = "It's a Draw!";
+    }
+    finalScoreInfoEl.textContent = `Your Score: ${state.score} | Optimus's Score: ${state.cpuScore}`;
     playSfx(audioVictory);
   } else {
-    finalTitle.textContent = "You Lost";
+    if (state.livesLeft > 0) {
+      finalTitle.textContent = "You Won, Congratulations!";
+      playSfx(audioVictory);
+    } else {
+      finalTitle.textContent = "You Lost";
+    }
   }
   finalOverlay.style.display = "flex";
 }

@@ -14,16 +14,18 @@
     <div id="scoreboard">
       <div class="team">
         <div class="name" id="leftName">Player</div>
-        <div class="score" id="leftScore"></div>
+        <div class="score big-score" id="leftScore">0</div>
       </div>
       <div style="position:relative;">
-        <div id="matchInfo" class="muted">3 Lives</div>
+        <div id="matchInfo" class="muted">Score: 0</div>
+        <div id="highScoreInfo" class="muted">High Score: 0</div>
+        <div id="timerInfo" class="muted big-score">Time: 1:00</div>
         <div id="speedInfo" class="muted" style="font-size:11px;margin-top:2px;">Speed: 0</div>
         <div class="point-banner" id="pointBanner">POINT!</div>
       </div>
       <div class="team" style="align-items:flex-end">
         <div class="name" id="rightName">Optimus</div>
-        <div class="score" id="rightScore"></div>
+        <div class="score big-score" id="rightScore">0</div>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;">
@@ -60,7 +62,8 @@
         <div class="selectable selected" data-level="normal">Normal</div>
         <div class="selectable" data-level="hard">Hard</div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;">
+        <button id="diffPrev" class="btn">Previous</button>
         <button id="diffContinue" class="btn">Next</button>
       </div>
     </div>
@@ -74,8 +77,24 @@
         <div class="selectable" data-lives="5">5 Lives</div>
         <div class="selectable" data-lives="7">7 Lives</div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;">
+        <button id="roundsPrev" class="btn">Previous</button>
         <button id="roundsContinue" class="btn">Next</button>
+      </div>
+    </div>
+  </div>
+  <div id="modeOverlay" class="overlay" style="display:none">
+    <div class="card">
+      <h2>Select Game Mode</h2>
+      <div class="muted">Choose your preferred game mode.</div>
+      <div class="grid3" id="modeGrid" style="margin-top:12px;">
+        <div class="selectable selected" data-mode="survival">Survival</div>
+        <div class="selectable" data-mode="scores">Scores</div>
+        <div></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;">
+        <button id="modePrev" class="btn">Previous</button>
+        <button id="modeContinue" class="btn">Next</button>
       </div>
     </div>
   </div>
@@ -88,8 +107,24 @@
         <div class="selectable" data-multiball="true">Multi-Ball (3)</div>
         <div></div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;">
+        <button id="multiBallPrev" class="btn">Previous</button>
         <button id="multiBallContinue" class="btn">Next</button>
+      </div>
+    </div>
+  </div>
+  <div id="timeOverlay" class="overlay" style="display:none">
+    <div class="card">
+      <h2>Select Match Duration</h2>
+      <div class="muted">Choose the duration for the scores match.</div>
+      <div class="grid3" id="timeGrid" style="margin-top:12px;">
+        <div class="selectable selected" data-time="60">1 Minute</div>
+        <div class="selectable" data-time="120">2 Minutes</div>
+        <div class="selectable" data-time="300">5 Minutes</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;">
+        <button id="timePrev" class="btn">Previous</button>
+        <button id="timeContinue" class="btn">Next</button>
       </div>
     </div>
   </div>
@@ -127,6 +162,7 @@
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+        <button id="themePrev" class="btn">Previous</button>
         <button id="themeContinue" class="btn">Start Match</button>
       </div>
     </div>
@@ -141,6 +177,7 @@
   <div id="finalOverlay" class="overlay" style="display:none">
     <div class="card finalModal">
       <div class="title" id="finalTitle">You Won!</div>
+      <div id="finalScoreInfo" class="muted"></div>
       <div style="display:flex;gap:10px;margin-top:8px;">
         <button id="playAgain" class="btn">Play Again</button>
         <button id="resetBtn" class="btn">Reset</button>
